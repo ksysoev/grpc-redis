@@ -11,21 +11,42 @@ import (
 const serviceTemplate = `
 // {{.ServiceName}} is the server API for {{.FullName}}
 type RPCRedis{{.ServiceName}} struct {
-    redis *{{.RedisClient}}
+    rpcSever *{{.RPCServer}}
+}
+
+func New{{.ServiceName}}(redis *{{.RedisClient}}) *RPCRedis{{.ServiceName}} {
+	rpcServer := {{.NewRPCServer}}(redis, "{{.FullName}}", "{{.ServiceName}}Group", {{.NewUUID}}().String())
+	service := &RPCRedis{{.ServiceName}}{rpcSever: rpcServer}
+
+	// Register handlers
+	{{- range .Methods}}
+	rpcServer.AddHandler("{{.}}", service.handle{{.}})
+	{{- end}}
+
+	return service
+}
+
+func (x *RPCRedis{{.ServiceName}}) Serve() error {
+	return x.rpcSever.Run()
+}
+
+func (x *RPCRedis{{.ServiceName}}) Close() error {
+	return x.rpcSever.Close()
 }
 `
 
 type ServiceData struct {
-	ServiceName string
-	FullName    string
-	RedisClient string
+	ServiceName  string
+	FullName     string
+	RedisClient  string
+	RPCServer    string
+	NewRPCServer string
+	NewUUID      string
+	Methods      []string
 }
-
-var test *string
 
 func main() {
 	var flags flag.FlagSet
-	test = flags.String("test", "test", "some test flag")
 
 	protogen.Options{
 		ParamFunc: flags.Set,
@@ -55,10 +76,19 @@ func generateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 	}
 
 	for _, service := range file.Services {
+		methods := make([]string, 0, len(service.Methods))
+		for _, method := range service.Methods {
+			methods = append(methods, method.GoName)
+		}
+
 		data := ServiceData{
-			ServiceName: service.GoName,
-			FullName:    string(service.Desc.FullName()),
-			RedisClient: g.QualifiedGoIdent(protogen.GoIdent{GoName: "Client", GoImportPath: "github.com/go-redis/redis/v9"}),
+			ServiceName:  service.GoName,
+			FullName:     string(service.Desc.FullName()),
+			RedisClient:  g.QualifiedGoIdent(protogen.GoIdent{GoName: "Client", GoImportPath: "github.com/go-redis/redis/v9"}),
+			RPCServer:    g.QualifiedGoIdent(protogen.GoIdent{GoName: "Server", GoImportPath: "github.com/ksysoev/redis-rpc"}),
+			NewRPCServer: g.QualifiedGoIdent(protogen.GoIdent{GoName: "NewServer", GoImportPath: "github.com/ksysoev/redis-rpc"}),
+			NewUUID:      g.QualifiedGoIdent(protogen.GoIdent{GoName: "New", GoImportPath: "github.com/google/uuid"}),
+			Methods:      methods,
 		}
 
 		var buf bytes.Buffer
@@ -69,10 +99,9 @@ func generateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 		g.P(buf.String())
 
 		for _, method := range service.Methods {
-			g.P("func (x *RPCService", service.GoName, ") ", method.GoName, "(", method.Input.GoIdent.GoName, ") ", method.Output.GoIdent.GoName, " {")
+			g.P("func (x *RPCRedis", service.GoName, ") ", method.GoName, "(", method.Input.GoIdent.GoName, ") ", method.Output.GoIdent.GoName, " {")
 			g.P("return `hello world`")
 			g.P("}")
-
 		}
 
 		g.P()

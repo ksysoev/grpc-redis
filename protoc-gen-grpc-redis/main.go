@@ -35,6 +35,12 @@ func (x *RPCRedis{{.ServiceName}}) Close() error {
 }
 `
 
+const methodTemplate = `
+func (x *RPCRedis{{.ServiceName}}) handle{{.MethodName}}(ctx {{.ContextType}}, req *{{.InputType}}) (*{{.OutputType}}, error) {
+	return nil, nil
+}
+`
+
 type ServiceData struct {
 	ServiceName  string
 	FullName     string
@@ -43,6 +49,14 @@ type ServiceData struct {
 	NewRPCServer string
 	NewUUID      string
 	Methods      []string
+}
+
+type MethodData struct {
+	ServiceName string
+	MethodName  string
+	InputType   string
+	OutputType  string
+	ContextType string
 }
 
 func main() {
@@ -70,7 +84,12 @@ func generateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 	g.P("package ", file.GoPackageName)
 	g.P()
 
-	tmpl, err := template.New("service").Parse(serviceTemplate)
+	tmplService, err := template.New("service").Parse(serviceTemplate)
+	if err != nil {
+		panic(err)
+	}
+
+	tmplMethod, err := template.New("method").Parse(methodTemplate)
 	if err != nil {
 		panic(err)
 	}
@@ -92,16 +111,28 @@ func generateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 		}
 
 		var buf bytes.Buffer
-		if err := tmpl.Execute(&buf, data); err != nil {
+		if err := tmplService.Execute(&buf, data); err != nil {
 			panic(err)
 		}
 
 		g.P(buf.String())
 
 		for _, method := range service.Methods {
-			g.P("func (x *RPCRedis", service.GoName, ") ", method.GoName, "(", method.Input.GoIdent.GoName, ") ", method.Output.GoIdent.GoName, " {")
-			g.P("return `hello world`")
-			g.P("}")
+			data := MethodData{
+				ServiceName: service.GoName,
+				MethodName:  method.GoName,
+				InputType:   g.QualifiedGoIdent(method.Input.GoIdent),
+				OutputType:  g.QualifiedGoIdent(method.Output.GoIdent),
+				ContextType: g.QualifiedGoIdent(protogen.GoIdent{GoName: "Context", GoImportPath: "context"}),
+			}
+
+			var buf bytes.Buffer
+			if err := tmplMethod.Execute(&buf, data); err != nil {
+				panic(err)
+			}
+
+			g.P(buf.String())
+
 		}
 
 		g.P()

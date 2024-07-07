@@ -116,7 +116,7 @@ func generateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 		data := ServiceData{
 			ServiceName:  service.GoName,
 			FullName:     string(service.Desc.FullName()),
-			RedisClient:  g.QualifiedGoIdent(protogen.GoIdent{GoName: "Client", GoImportPath: "github.com/go-redis/redis/v9"}),
+			RedisClient:  g.QualifiedGoIdent(protogen.GoIdent{GoName: "Client", GoImportPath: "github.com/redis/go-redis/v9"}),
 			RPCServer:    g.QualifiedGoIdent(protogen.GoIdent{GoName: "Server", GoImportPath: "github.com/ksysoev/redis-rpc"}),
 			NewRPCServer: g.QualifiedGoIdent(protogen.GoIdent{GoName: "NewServer", GoImportPath: "github.com/ksysoev/redis-rpc"}),
 			NewUUID:      g.QualifiedGoIdent(protogen.GoIdent{GoName: "New", GoImportPath: "github.com/google/uuid"}),

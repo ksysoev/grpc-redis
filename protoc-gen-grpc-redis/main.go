@@ -40,7 +40,7 @@ func (x *RPCRedis{{.ServiceName}}) Close() {
 `
 
 const methodTemplate = `
-func (x *RPCRedis{{.ServiceName}}) handle{{.MethodName}}(ctx {{.ContextType}}, req {{.RequestType}}) (any, error) {
+func (x *RPCRedis{{.ServiceName}}) handle{{.MethodName}}(req {{.RequestType}}) (any, error) {
 	var rpcReq {{.InputType}}
 
 	err := req.ParseParams(&rpcReq)
@@ -48,7 +48,7 @@ func (x *RPCRedis{{.ServiceName}}) handle{{.MethodName}}(ctx {{.ContextType}}, r
 		return nil, {{.Errorf}}("error parsing request: %v", err)
 	}
 
-	return x.service.{{.MethodName}}(ctx, &rpcReq)
+	return x.service.{{.MethodName}}(req.Context(), &rpcReq)
 }
 `
 
@@ -67,7 +67,6 @@ type MethodData struct {
 	MethodName  string
 	InputType   string
 	OutputType  string
-	ContextType string
 	RequestType string
 	Errorf      string
 }
@@ -140,7 +139,6 @@ func generateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 				MethodName:  method.GoName,
 				InputType:   g.QualifiedGoIdent(method.Input.GoIdent),
 				OutputType:  g.QualifiedGoIdent(method.Output.GoIdent),
-				ContextType: g.QualifiedGoIdent(protogen.GoIdent{GoName: "Context", GoImportPath: "context"}),
 				RequestType: g.QualifiedGoIdent(protogen.GoIdent{GoName: "Request", GoImportPath: "github.com/ksysoev/redis-rpc"}),
 				Errorf:      g.QualifiedGoIdent(protogen.GoIdent{GoName: "Errorf", GoImportPath: "fmt"}),
 			}

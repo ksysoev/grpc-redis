@@ -34,8 +34,8 @@ func (x *RPCRedis{{.ServiceName}}) Serve() error {
 	return x.rpcSever.Run()
 }
 
-func (x *RPCRedis{{.ServiceName}}) Close() error {
-	return x.rpcSever.Close()
+func (x *RPCRedis{{.ServiceName}}) Close() {
+	x.rpcSever.Close()
 }
 `
 

@@ -1,10 +1,25 @@
 package main
 
 import (
+	"bytes"
 	"flag"
+	"text/template"
 
 	"google.golang.org/protobuf/compiler/protogen"
 )
+
+const serviceTemplate = `
+// {{.ServiceName}} is the server API for {{.FullName}}
+type RPCRedis{{.ServiceName}} struct {
+    redis *{{.RedisClient}}
+}
+`
+
+type ServiceData struct {
+	ServiceName string
+	FullName    string
+	RedisClient string
+}
 
 var test *string
 
@@ -34,16 +49,24 @@ func generateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 	g.P("package ", file.GoPackageName)
 	g.P()
 
+	tmpl, err := template.New("service").Parse(serviceTemplate)
+	if err != nil {
+		panic(err)
+	}
+
 	for _, service := range file.Services {
-		g.P("// ", service.GoName, " is the server API for ", service.Desc.FullName())
-		g.P()
+		data := ServiceData{
+			ServiceName: service.GoName,
+			FullName:    string(service.Desc.FullName()),
+			RedisClient: g.QualifiedGoIdent(protogen.GoIdent{GoName: "Client", GoImportPath: "github.com/go-redis/redis/v9"}),
+		}
 
-		g.P("type RPCRedis", service.GoName, " struct {")
-		g.P("redis *", g.QualifiedGoIdent(protogen.GoIdent{GoName: "Client", GoImportPath: "github.com/go-redis/redis/v9"}))
+		var buf bytes.Buffer
+		if err := tmpl.Execute(&buf, data); err != nil {
+			panic(err)
+		}
 
-		g.P("}")
-
-		g.P()
+		g.P(buf.String())
 
 		for _, method := range service.Methods {
 			g.P("func (x *RPCService", service.GoName, ") ", method.GoName, "(", method.Input.GoIdent.GoName, ") ", method.Output.GoIdent.GoName, " {")

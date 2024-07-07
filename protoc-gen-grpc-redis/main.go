@@ -34,10 +34,25 @@ func generateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 	g.P("package ", file.GoPackageName)
 	g.P()
 
-	for _, msg := range file.Messages {
-		g.P("func (x *", msg.GoIdent, ") Hello() string {")
-		g.P("return `hello world`")
+	for _, service := range file.Services {
+		g.P("// ", service.GoName, " is the server API for ", service.Desc.FullName())
+		g.P()
+
+		g.P("type RPCRedis", service.GoName, " struct {")
+		g.P("redis *", g.QualifiedGoIdent(protogen.GoIdent{GoName: "Client", GoImportPath: "github.com/go-redis/redis/v9"}))
+
 		g.P("}")
+
+		g.P()
+
+		for _, method := range service.Methods {
+			g.P("func (x *RPCService", service.GoName, ") ", method.GoName, "(", method.Input.GoIdent.GoName, ") ", method.Output.GoIdent.GoName, " {")
+			g.P("return `hello world`")
+			g.P("}")
+
+		}
+
+		g.P()
 	}
 
 	return g

@@ -12,10 +12,10 @@ const serviceTemplate = `
 // {{.ServiceName}} is the server API for {{.FullName}}
 type RPCRedis{{.ServiceName}} struct {
     rpcSever *{{.RPCServer}}
-	service  {{.ServiceName}}Service
+	service  *{{.ServiceName}}Service
 }
 
-func New{{.ServiceName}}(redis *{{.RedisClient}}, grpcService {{.ServiceName}}Service) *RPCRedis{{.ServiceName}} {
+func NewRedis{{.ServiceName}}(redis *{{.RedisClient}}, grpcService *{{.ServiceName}}Service) *RPCRedis{{.ServiceName}} {
 	rpcServer := {{.NewRPCServer}}(redis, "{{.FullName}}", "{{.ServiceName}}Group", {{.NewUUID}}().String())
 	service := &RPCRedis{{.ServiceName}}{
 		rpcSever: rpcServer,

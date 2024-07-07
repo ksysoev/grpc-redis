@@ -12,11 +12,15 @@ const serviceTemplate = `
 // {{.ServiceName}} is the server API for {{.FullName}}
 type RPCRedis{{.ServiceName}} struct {
     rpcSever *{{.RPCServer}}
+	service  {{.ServiceName}}Service
 }
 
-func New{{.ServiceName}}(redis *{{.RedisClient}}) *RPCRedis{{.ServiceName}} {
+func New{{.ServiceName}}(redis *{{.RedisClient}}, grpcService {{.ServiceName}}Service) *RPCRedis{{.ServiceName}} {
 	rpcServer := {{.NewRPCServer}}(redis, "{{.FullName}}", "{{.ServiceName}}Group", {{.NewUUID}}().String())
-	service := &RPCRedis{{.ServiceName}}{rpcSever: rpcServer}
+	service := &RPCRedis{{.ServiceName}}{
+		rpcSever: rpcServer,
+		service:  grpcService,
+	}
 
 	// Register handlers
 	{{- range .Methods}}
@@ -36,8 +40,15 @@ func (x *RPCRedis{{.ServiceName}}) Close() error {
 `
 
 const methodTemplate = `
-func (x *RPCRedis{{.ServiceName}}) handle{{.MethodName}}(ctx {{.ContextType}}, req *{{.InputType}}) (*{{.OutputType}}, error) {
-	return nil, nil
+func (x *RPCRedis{{.ServiceName}}) handle{{.MethodName}}(ctx {{.ContextType}}, req {{.RequestType}}) (any, error) {
+	var rpcReq {{.InputType}}
+
+	err := req.ParseParams(&rpcReq)
+	if err != nil {
+		return nil, {{.Errorf}}("error parsing request: %v", err)
+	}
+
+	return x.service.{{.MethodName}}(ctx, &rpcReq)
 }
 `
 
@@ -57,6 +68,8 @@ type MethodData struct {
 	InputType   string
 	OutputType  string
 	ContextType string
+	RequestType string
+	Errorf      string
 }
 
 func main() {
@@ -124,6 +137,8 @@ func generateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 				InputType:   g.QualifiedGoIdent(method.Input.GoIdent),
 				OutputType:  g.QualifiedGoIdent(method.Output.GoIdent),
 				ContextType: g.QualifiedGoIdent(protogen.GoIdent{GoName: "Context", GoImportPath: "context"}),
+				RequestType: g.QualifiedGoIdent(protogen.GoIdent{GoName: "Request", GoImportPath: "github.com/ksysoev/redis-rpc"}),
+				Errorf:      g.QualifiedGoIdent(protogen.GoIdent{GoName: "Errorf", GoImportPath: "fmt"}),
 			}
 
 			var buf bytes.Buffer

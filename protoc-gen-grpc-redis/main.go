@@ -131,6 +131,10 @@ func generateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 		g.P(buf.String())
 
 		for _, method := range service.Methods {
+			if method.Desc.IsStreamingClient() || method.Desc.IsStreamingServer() {
+				continue
+			}
+
 			data := MethodData{
 				ServiceName: service.GoName,
 				MethodName:  method.GoName,

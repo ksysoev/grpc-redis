@@ -1,8 +1,8 @@
 package template
 
 import (
-	"html/template"
 	"strings"
+	"text/template"
 )
 
 const methodTemplate = `

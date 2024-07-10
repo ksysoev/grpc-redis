@@ -5,39 +5,10 @@ import (
 	"flag"
 	"text/template"
 
+	tmpl "github.com/ksysoev/grpc-redis/pkg/template"
+
 	"google.golang.org/protobuf/compiler/protogen"
 )
-
-const serviceTemplate = `
-// {{.ServiceName}} is the server API for {{.FullName}}
-type RPCRedis{{.ServiceName}} struct {
-    rpcSever *{{.RPCServer}}
-	service  *{{.ServiceName}}Service
-}
-
-func NewRedis{{.ServiceName}}(redis *{{.RedisClient}}, grpcService *{{.ServiceName}}Service) *RPCRedis{{.ServiceName}} {
-	rpcServer := {{.NewRPCServer}}(redis, "{{.FullName}}", "{{.ServiceName}}Group", {{.NewUUID}}().String())
-	service := &RPCRedis{{.ServiceName}}{
-		rpcSever: rpcServer,
-		service:  grpcService,
-	}
-
-	// Register handlers
-	{{- range .Methods}}
-	rpcServer.AddHandler("{{.}}", service.handle{{.}})
-	{{- end}}
-
-	return service
-}
-
-func (x *RPCRedis{{.ServiceName}}) Serve() error {
-	return x.rpcSever.Run()
-}
-
-func (x *RPCRedis{{.ServiceName}}) Close() {
-	x.rpcSever.Close()
-}
-`
 
 const methodTemplate = `
 func (x *RPCRedis{{.ServiceName}}) handle{{.MethodName}}(req {{.RequestType}}) (any, error) {
@@ -51,16 +22,6 @@ func (x *RPCRedis{{.ServiceName}}) handle{{.MethodName}}(req {{.RequestType}}) (
 	return x.service.{{.MethodName}}(req.Context(), &rpcReq)
 }
 `
-
-type ServiceData struct {
-	ServiceName  string
-	FullName     string
-	RedisClient  string
-	RPCServer    string
-	NewRPCServer string
-	NewUUID      string
-	Methods      []string
-}
 
 type MethodData struct {
 	ServiceName string
@@ -96,11 +57,6 @@ func generateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 	g.P("package ", file.GoPackageName)
 	g.P()
 
-	tmplService, err := template.New("service").Parse(serviceTemplate)
-	if err != nil {
-		panic(err)
-	}
-
 	tmplMethod, err := template.New("method").Parse(methodTemplate)
 	if err != nil {
 		panic(err)
@@ -112,7 +68,7 @@ func generateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 			methods = append(methods, method.GoName)
 		}
 
-		data := ServiceData{
+		tmplService := tmpl.Service{
 			ServiceName:  service.GoName,
 			FullName:     string(service.Desc.FullName()),
 			RedisClient:  g.QualifiedGoIdent(protogen.GoIdent{GoName: "Client", GoImportPath: "github.com/redis/go-redis/v9"}),
@@ -122,12 +78,12 @@ func generateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 			Methods:      methods,
 		}
 
-		var buf bytes.Buffer
-		if err := tmplService.Execute(&buf, data); err != nil {
+		svcRender, err := tmplService.Render()
+		if err != nil {
 			panic(err)
 		}
 
-		g.P(buf.String())
+		g.P(svcRender)
 
 		for _, method := range service.Methods {
 			if method.Desc.IsStreamingClient() || method.Desc.IsStreamingServer() {

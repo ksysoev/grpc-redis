@@ -1,36 +1,12 @@
 package main
 
 import (
-	"bytes"
 	"flag"
-	"text/template"
 
 	tmpl "github.com/ksysoev/grpc-redis/pkg/template"
 
 	"google.golang.org/protobuf/compiler/protogen"
 )
-
-const methodTemplate = `
-func (x *RPCRedis{{.ServiceName}}) handle{{.MethodName}}(req {{.RequestType}}) (any, error) {
-	var rpcReq {{.InputType}}
-
-	err := req.ParseParams(&rpcReq)
-	if err != nil {
-		return nil, {{.Errorf}}("error parsing request: %v", err)
-	}
-
-	return x.service.{{.MethodName}}(req.Context(), &rpcReq)
-}
-`
-
-type MethodData struct {
-	ServiceName string
-	MethodName  string
-	InputType   string
-	OutputType  string
-	RequestType string
-	Errorf      string
-}
 
 func main() {
 	var flags flag.FlagSet
@@ -56,11 +32,6 @@ func generateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 	g.P()
 	g.P("package ", file.GoPackageName)
 	g.P()
-
-	tmplMethod, err := template.New("method").Parse(methodTemplate)
-	if err != nil {
-		panic(err)
-	}
 
 	for _, service := range file.Services {
 		methods := make([]string, 0, len(service.Methods))
@@ -90,7 +61,7 @@ func generateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 				continue
 			}
 
-			data := MethodData{
+			tmplMethod := tmpl.Method{
 				ServiceName: service.GoName,
 				MethodName:  method.GoName,
 				InputType:   g.QualifiedGoIdent(method.Input.GoIdent),
@@ -99,12 +70,11 @@ func generateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 				Errorf:      g.QualifiedGoIdent(protogen.GoIdent{GoName: "Errorf", GoImportPath: "fmt"}),
 			}
 
-			var buf bytes.Buffer
-			if err := tmplMethod.Execute(&buf, data); err != nil {
+			methodRender, err := tmplMethod.Render()
+			if err != nil {
 				panic(err)
 			}
-
-			g.P(buf.String())
+			g.P(methodRender)
 
 		}
 

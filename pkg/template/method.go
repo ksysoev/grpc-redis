@@ -21,7 +21,7 @@ func (x *RPCRedis{{.ServiceName}}) handle{{.MethodName}}(req {{.RequestType}}) (
 var tmplMethod *template.Template
 
 func init() {
-	tmplService = template.Must(template.New("method").Parse(serviceTemplate))
+	tmplMethod = template.Must(template.New("method").Parse(methodTemplate))
 }
 
 // Method represents a gRPC method.
@@ -39,7 +39,7 @@ type Method struct {
 // Returns the rendered string and any error encountered during rendering.
 func (s Method) Render() (string, error) {
 	var buf strings.Builder
-	if err := tmplService.Execute(&buf, s); err != nil {
+	if err := tmplMethod.Execute(&buf, s); err != nil {
 		return "", err
 	}
 	return buf.String(), nil

@@ -7,8 +7,15 @@ import (
 	"google.golang.org/protobuf/compiler/protogen"
 )
 
+// fileName is the name of the generated file.
 const fileName = "_grpc-redis.pb.go"
 
+// Generate generates the code for the given protocol buffer file.
+// It takes a protogen.Plugin and a protogen.File as input and returns an error if any.
+// The generated code includes the file header, services, and methods.
+// For each service, it generates the service definition and for each method, it generates the method definition.
+// If a method is a streaming client or a streaming server, it is skipped.
+// The generated code is written to the specified file.
 func Generate(gen *protogen.Plugin, file *protogen.File) error {
 	filename := file.GeneratedFilenamePrefix + fileName
 	g := gen.NewGeneratedFile(filename, file.GoImportPath)
@@ -45,6 +52,9 @@ func Generate(gen *protogen.Plugin, file *protogen.File) error {
 	return nil
 }
 
+// generateFileHeader generates the header content for the generated file based on the provided protogen.File.
+// It returns the rendered file header as a string.
+// An error is returned if there is any issue generating the file header.
 func generateFileHeader(file *protogen.File) (string, error) {
 	tmplFile := tmpl.File{
 		PackageName: string(file.GoPackageName),
@@ -58,6 +68,8 @@ func generateFileHeader(file *protogen.File) (string, error) {
 	return fileHeaderRender, nil
 }
 
+// generateService generates the code for a service based on the provided protogen.GeneratedFile and protogen.Service.
+// It returns the rendered service code as a string and an error if there was any issue generating the code.
 func generateService(g *protogen.GeneratedFile, service *protogen.Service) (string, error) {
 	methods := make([]string, 0, len(service.Methods))
 	for _, method := range service.Methods {
@@ -82,6 +94,8 @@ func generateService(g *protogen.GeneratedFile, service *protogen.Service) (stri
 	return svcRender, nil
 }
 
+// generateMethod generates a method for the given protogen.GeneratedFile and protogen.Method.
+// It returns the rendered method as a string and an error if there was any issue during generation.
 func generateMethod(g *protogen.GeneratedFile, method *protogen.Method) (string, error) {
 	tmplMethod := tmpl.Method{
 		ServiceName: method.Parent.GoName,

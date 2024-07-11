@@ -16,7 +16,7 @@ func TestRender(t *testing.T) {
 	expected := `
 // TestService is the server API for com.example.TestService
 type RPCRedisTestService struct {
-    rpcSever *rpcServer
+	rpcSever *rpcServer
 	service  *TestServiceService
 }
 

@@ -28,7 +28,7 @@ func Generate(gen *protogen.Plugin, file *protogen.File) error {
 	g.P(fileHeader)
 
 	for _, service := range file.Services {
-		generatedService, err := generateService(g, service)
+		generatedService, err := generateService(g, service, string(service.Desc.FullName()))
 		if err != nil {
 			return fmt.Errorf("error generating file %s: %v", filename, err)
 		}
@@ -70,7 +70,7 @@ func generateFileHeader(file *protogen.File) (string, error) {
 
 // generateService generates the code for a service based on the provided protogen.GeneratedFile and protogen.Service.
 // It returns the rendered service code as a string and an error if there was any issue generating the code.
-func generateService(g *protogen.GeneratedFile, service *protogen.Service) (string, error) {
+func generateService(g *protogen.GeneratedFile, service *protogen.Service, fullName string) (string, error) {
 	methods := make([]string, 0, len(service.Methods))
 	for _, method := range service.Methods {
 		methods = append(methods, method.GoName)
@@ -78,7 +78,7 @@ func generateService(g *protogen.GeneratedFile, service *protogen.Service) (stri
 
 	tmplService := tmpl.Service{
 		ServiceName:  service.GoName,
-		FullName:     string(service.Desc.FullName()),
+		FullName:     fullName,
 		RedisClient:  g.QualifiedGoIdent(protogen.GoIdent{GoName: "Client", GoImportPath: "github.com/redis/go-redis/v9"}),
 		RPCServer:    g.QualifiedGoIdent(protogen.GoIdent{GoName: "Server", GoImportPath: "github.com/ksysoev/redis-rpc"}),
 		NewRPCServer: g.QualifiedGoIdent(protogen.GoIdent{GoName: "NewServer", GoImportPath: "github.com/ksysoev/redis-rpc"}),

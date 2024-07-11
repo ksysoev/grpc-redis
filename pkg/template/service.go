@@ -8,7 +8,7 @@ import (
 const serviceTemplate = `
 // {{.ServiceName}} is the server API for {{.FullName}}
 type RPCRedis{{.ServiceName}} struct {
-    rpcSever *{{.RPCServer}}
+	rpcSever *{{.RPCServer}}
 	service  *{{.ServiceName}}Service
 }
 

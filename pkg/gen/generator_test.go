@@ -50,3 +50,55 @@ func (x *RPCRedisTestService) handleTestMethod(req redis_rpc.Request) (any, erro
 		t.Fatalf("invalid method code, expected:\n%s\ngot:\n%s", expectedMethod, renderedMethod)
 	}
 }
+
+func TestGenerateService(t *testing.T) {
+	plugin := &protogen.Plugin{}
+	g := plugin.NewGeneratedFile("test.go", "test")
+
+	service := &protogen.Service{
+		GoName: "TestService",
+		Methods: []*protogen.Method{
+			{GoName: "TestMethod1"},
+			{GoName: "TestMethod2"},
+		},
+	}
+
+	expectedService := `
+// TestService is the server API for example.TestService
+type RPCRedisTestService struct {
+	rpcSever *redis_rpc.Server
+	service  *TestServiceService
+}
+
+func NewRedisTestService(redis *v9.Client, grpcService *TestServiceService) *RPCRedisTestService {
+	rpcServer := redis_rpc.NewServer(redis, "example.TestService", "TestServiceGroup", uuid.New().String())
+	service := &RPCRedisTestService{
+		rpcSever: rpcServer,
+		service:  grpcService,
+	}
+
+	// Register handlers
+	rpcServer.AddHandler("TestMethod1", service.handleTestMethod1)
+	rpcServer.AddHandler("TestMethod2", service.handleTestMethod2)
+
+	return service
+}
+
+func (x *RPCRedisTestService) Serve() error {
+	return x.rpcSever.Run()
+}
+
+func (x *RPCRedisTestService) Close() {
+	x.rpcSever.Close()
+}
+`
+
+	renderedService, err := generateService(g, service, "example.TestService")
+	if err != nil {
+		t.Fatalf("failed to generate method: %v", err)
+	}
+
+	if renderedService != expectedService {
+		t.Fatalf("invalid method code, expected:\n%s\ngot:\n%s", expectedService, renderedService)
+	}
+}

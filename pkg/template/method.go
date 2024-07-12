@@ -37,10 +37,11 @@ type Method struct {
 // Render renders the Method struct into a string representation.
 // It uses the tmplService template to execute the rendering process.
 // Returns the rendered string and any error encountered during rendering.
-func (s Method) Render() (string, error) {
+func (s *Method) Render() (string, error) {
 	var buf strings.Builder
 	if err := tmplMethod.Execute(&buf, s); err != nil {
 		return "", err
 	}
+
 	return buf.String(), nil
 }

@@ -56,10 +56,11 @@ type Service struct {
 // Render renders the service template and returns the rendered string.
 // It uses the tmplService template and populates it with the data from the Service struct.
 // If an error occurs during rendering, it returns an empty string and the error.
-func (s Service) Render() (string, error) {
+func (s *Service) Render() (string, error) {
 	var buf strings.Builder
 	if err := tmplService.Execute(&buf, s); err != nil {
 		return "", err
 	}
+
 	return buf.String(), nil
 }

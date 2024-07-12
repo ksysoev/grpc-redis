@@ -1,4 +1,4 @@
-name: WSGet
+name: Protoc Gen RPC Redis
 
 on: [push]
 

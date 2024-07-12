@@ -1,4 +1,4 @@
-module github.com/ksysoev/grpc-redis
+module github.com/ksysoev/protoc-gen-rpc-redis
 
 go 1.22.5
 

@@ -3,12 +3,12 @@ package gen
 import (
 	"fmt"
 
-	tmpl "github.com/ksysoev/grpc-redis/pkg/template"
+	tmpl "github.com/ksysoev/protoc-gen-rpc-redis/pkg/template"
 	"google.golang.org/protobuf/compiler/protogen"
 )
 
 // fileName is the name of the generated file.
-const fileName = "_grpc-redis.pb.go"
+const fileName = "_rpc-redis.pb.go"
 
 // Generate generates the code for the given protocol buffer file.
 // It takes a protogen.Plugin and a protogen.File as input and returns an error if any.

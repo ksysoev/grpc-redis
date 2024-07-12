@@ -6,7 +6,7 @@ This package provides a plugin for the `protoc` utility, enabling the generation
 ## Installation
 
 ```sh
-go install github.com/ksysoev/grpc-redis/protoc-gen-grpc-redis@latest
+go install github.com/ksysoev/protoc-gen-rpc-redis@latest
 ```
 
 ## Contributing

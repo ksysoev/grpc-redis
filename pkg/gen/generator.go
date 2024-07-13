@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	tmpl "github.com/ksysoev/protoc-gen-rpc-redis/pkg/template"
+	"google.golang.org/grpc/grpclog"
 	"google.golang.org/protobuf/compiler/protogen"
 )
 
@@ -37,6 +38,10 @@ func Generate(gen *protogen.Plugin, file *protogen.File) error {
 
 		for _, method := range service.Methods {
 			if method.Desc.IsStreamingClient() || method.Desc.IsStreamingServer() {
+				if grpclog.V(1) {
+					grpclog.Warningf("rpc-redis: skipping method %s because it is a streaming client or server", method.GoName)
+				}
+
 				continue
 			}
 

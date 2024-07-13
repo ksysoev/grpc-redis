@@ -29,7 +29,7 @@ func TestGenerateMethod(t *testing.T) {
 	}
 
 	expectedMethod := `
-func (x *RPCRedisTestService) handleTestMethod(req redis_rpc.Request) (any, error) {
+func (x *RPCRedisTestService) handleTestMethod(req rpc_redis.Request) (any, error) {
 	var rpcReq gen.TestInput
 
 	err := req.ParseParams(&rpcReq)
@@ -66,12 +66,12 @@ func TestGenerateService(t *testing.T) {
 	expectedService := `
 // TestService is the server API for example.TestService
 type RPCRedisTestService struct {
-	rpcSever *redis_rpc.Server
+	rpcSever *rpc_redis.Server
 	service  *TestServiceService
 }
 
 func NewRedisTestService(redis *v9.Client, grpcService *TestServiceService) *RPCRedisTestService {
-	rpcServer := redis_rpc.NewServer(redis, "example.TestService", "TestServiceGroup", uuid.New().String())
+	rpcServer := rpc_redis.NewServer(redis, "example.TestService", "TestServiceGroup", uuid.New().String())
 	service := &RPCRedisTestService{
 		rpcSever: rpcServer,
 		service:  grpcService,

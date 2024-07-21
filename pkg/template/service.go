@@ -12,8 +12,8 @@ type RPCRedis{{.ServiceName}} struct {
 	service  *{{.ServiceName}}Service
 }
 
-func NewRedis{{.ServiceName}}(redis *{{.RedisClient}}, grpcService *{{.ServiceName}}Service) *RPCRedis{{.ServiceName}} {
-	rpcServer := {{.NewRPCServer}}(redis, "{{.FullName}}", "{{.ServiceName}}Group", {{.NewUUID}}().String())
+func NewRedis{{.ServiceName}}(redis *{{.RedisClient}}, grpcService *{{.ServiceName}}Service, opts ...{{.RPCServerOpt}}) *RPCRedis{{.ServiceName}} {
+	rpcServer := {{.NewRPCServer}}(redis, "{{.FullName}}", "{{.ServiceName}}Group", {{.NewUUID}}().String(), opts...)
 	service := &RPCRedis{{.ServiceName}}{
 		rpcSever: rpcServer,
 		service:  grpcService,
@@ -48,6 +48,7 @@ type Service struct {
 	FullName     string   // The full name of the service.
 	RedisClient  string   // The Redis client used by the service.
 	RPCServer    string   // The RPC server used by the service.
+	RPCServerOpt string   // The RPC server options used by the service.
 	NewRPCServer string   // The new RPC server used by the service.
 	NewUUID      string   // The new UUID used by the service.
 	Methods      []string // The list of methods provided by the service.

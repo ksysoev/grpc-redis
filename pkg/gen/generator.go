@@ -86,6 +86,7 @@ func generateService(g *protogen.GeneratedFile, service *protogen.Service, fullN
 		FullName:     fullName,
 		RedisClient:  g.QualifiedGoIdent(protogen.GoIdent{GoName: "Client", GoImportPath: "github.com/redis/go-redis/v9"}),
 		RPCServer:    g.QualifiedGoIdent(protogen.GoIdent{GoName: "Server", GoImportPath: "github.com/ksysoev/rpc-redis"}),
+		RPCServerOpt: g.QualifiedGoIdent(protogen.GoIdent{GoName: "ServerOption", GoImportPath: "github.com/ksysoev/rpc-redis"}),
 		NewRPCServer: g.QualifiedGoIdent(protogen.GoIdent{GoName: "NewServer", GoImportPath: "github.com/ksysoev/rpc-redis"}),
 		NewUUID:      g.QualifiedGoIdent(protogen.GoIdent{GoName: "New", GoImportPath: "github.com/google/uuid"}),
 		Methods:      methods,

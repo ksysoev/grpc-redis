@@ -13,7 +13,7 @@ func TestMethodRender(t *testing.T) {
 	}
 
 	expected := `
-func (x *RPCRedisTestService) handleTestMethod(req TestRPCRequest) (any, error) {
+func (x *RPCRedisTestService) handleTestMethod(req *TestRPCRequest) (any, error) {
 	var rpcReq TestRequest
 
 	err := req.ParseParams(&rpcReq)

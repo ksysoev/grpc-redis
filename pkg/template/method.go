@@ -6,7 +6,7 @@ import (
 )
 
 const methodTemplate = `
-func (x *RPCRedis{{.ServiceName}}) handle{{.MethodName}}(req {{.RequestType}}) (any, error) {
+func (x *RPCRedis{{.ServiceName}}) handle{{.MethodName}}(req *{{.RequestType}}) (any, error) {
 	var rpcReq {{.InputType}}
 
 	err := req.ParseParams(&rpcReq)

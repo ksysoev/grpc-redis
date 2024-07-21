@@ -8,6 +8,7 @@ func TestRender(t *testing.T) {
 		FullName:     "com.example.TestService",
 		RedisClient:  "redisClient",
 		RPCServer:    "rpcServer",
+		RPCServerOpt: "ServerOption",
 		NewRPCServer: "newRPCServer",
 		NewUUID:      "newUUID",
 		Methods:      []string{"Method1", "Method2"},
@@ -20,8 +21,8 @@ type RPCRedisTestService struct {
 	service  *TestServiceService
 }
 
-func NewRedisTestService(redis *redisClient, grpcService *TestServiceService) *RPCRedisTestService {
-	rpcServer := newRPCServer(redis, "com.example.TestService", "TestServiceGroup", newUUID().String())
+func NewRedisTestService(redis *redisClient, grpcService *TestServiceService, opts ...ServerOption) *RPCRedisTestService {
+	rpcServer := newRPCServer(redis, "com.example.TestService", "TestServiceGroup", newUUID().String(), opts...)
 	service := &RPCRedisTestService{
 		rpcSever: rpcServer,
 		service:  grpcService,
